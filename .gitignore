@@ -1,0 +1,8 @@
+config.json
+.idea/
+https/
+bank-server/node_modules/
+bank-server/userdb.sqlite
+bank-web/.vscode/
+bank-web/.idea/
+bank-web/.node_modules/

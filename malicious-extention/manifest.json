@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "We Steal Your Money",
+  "version": "1.0",
+  "description": "A malicious extension that demonstrates insecure CSP.",
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "permissions": ["scripting", "activeTab"],
+  "content_scripts": [
+    {
+      "js": [
+        "script.js"
+      ],
+      "matches": [
+        "http://localhost/*"
+      ]
+    }
+  ]
+}
