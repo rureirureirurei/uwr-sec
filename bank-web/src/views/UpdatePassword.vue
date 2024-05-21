@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import axios from "axios";
 import { useRoute } from 'vue-router'
-import router from "@/router/index.js";
+import router from "@/router/routes.js";
 const route = useRoute()
 const password = ref('');
 const updatePassword = async() => {

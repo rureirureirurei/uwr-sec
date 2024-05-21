@@ -1,10 +1,12 @@
 <script setup>
 import { ref } from 'vue';
 import axios from 'axios';
-import router from "@/router/index.js";
+import router from "@/router/routes.js";
+import {useAuthStore} from "@/stores/auth.js";
 
 const login = ref('');
 const password = ref('');
+const auth = useAuthStore();
 
 const handleSignIn = async () => {
   try {
@@ -12,9 +14,13 @@ const handleSignIn = async () => {
       login: login.value,
       password: password.value
     });
-    alert('Sign in successful: ' + response.data);
+    console.log(response.data)
+    auth.setLogin(response.data.login);
+    auth.setToken(response.data.token);
+    await router.push({ name: 'transfer'})
   } catch (error) {
-    alert('Sign in failed: ' + error.response.data);
+    console.log(error)
+    alert('Sign in failed 😢');
   }
 };
 

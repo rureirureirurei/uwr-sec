@@ -44,7 +44,7 @@ window.appFunctions = {
   <main>
     <input onchange="window.appFunctions.cardNumber = this.value"/>
     <button onclick="window.appFunctions.promptTransfer()">Transfer funds</button>
-
+    TEST
     <!-- Modal for confirmation -->
     <div id="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center;">
       <div style="background-color: white; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">

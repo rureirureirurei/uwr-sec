@@ -1,12 +1,12 @@
 const { validationResult, body } = require("express-validator");
 const persistence = require("./persistence");
 const config = require('../config.json')
-const {verify} = require("jsonwebtoken");
+const {verify, sign} = require("jsonwebtoken");
 
 const verifyLogin = body('login').isLength({ min: 1 }).matches(/^[a-zA-Z0-9_]+$/)
 const verifyPassword = body('password').isLength({ min: 8 }).matches(/^[a-zA-Z0-9_!@#$%^&*()]+$/)
 
-const getUserJWT = (username) => jwt.sign(
+const getUserJWT = (username) => sign(
     {username: username},
     config.session.key,
     {expiresIn: '1d'}
@@ -27,15 +27,25 @@ function authenticateToken(req, res, next) {
 }
 
 const endpoints = {
-    login : async (req, res) => {
+    login: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).send('Password too short or invalid characters');
         const { login, password } = req.body;
         try {
             const result = await persistence.login(login, password);
-            res.send(result);
+            if (!result) {
+                return res.status(401).send('Invalid login or password');
+            }
+            const token = getUserJWT(login);
+            res.cookie('jwt', token, {
+                httpOnly: true, // The cookie only accessible by the web server
+                secure: true,   // Set to true if using https
+                sameSite: 'strict', // Helps mitigate CSRF attacks
+                maxAge: 3600000 // 1 hour
+            });
+            res.send({ token: token, login: login});
         } catch (error) {
-            res.status(500).send(error);
+            res.status(500).send(error.message);
         }
     },
     signup: async (req, res) => {
