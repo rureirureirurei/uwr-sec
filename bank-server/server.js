@@ -23,7 +23,7 @@ const httpsOptions = {
     cert: fs.readFileSync(config.https.certificate)
 };
 
-app.post('/transfer', endpoints.transfer);
+app.post('/transfer', endpoints.authenticateToken, endpoints.transfer);
 
 app.post('/signin',
     endpoints.verifyLogin,
@@ -46,6 +46,8 @@ app.post('/update/password',
     endpoints.verifyPassword,
     endpoints.updatePassword,
 );
+
+app.get('/transactions', endpoints.authenticateToken, endpoints.transactions)
 
 /* Actually run server */
 https.createServer(httpsOptions, app).listen(config.server.port, () => {

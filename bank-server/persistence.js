@@ -2,41 +2,41 @@ const sqlite3 = require('sqlite3').verbose();
 const argon2 = require('argon2'); // Ensure argon2 is installed
 const config = require('../config.json');
 const crypto = require("crypto");
+const moment = require("moment");
 
 // INIT DB
 let db = null;
+
+const createTableIfNotExists = (tableName, createStatement) => {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='${tableName}'`, (err, row) => {
+        if (err) return console.error(err.message);
+        if (!row) {
+            db.run(createStatement, (err) => {
+                if (err) return console.error(err.message);
+                console.log(`${tableName} table created`);
+            });
+        } else {
+            console.log(`${tableName} table already exists`);
+        }
+    });
+};
+
 const init = () => {
     db = new sqlite3.Database(config.database.file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if (err) return console.error(err.message);
         console.log(`Connected to the SQLite database at ${config.database.file}.`);
     });
 
-    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='users'", (err, row) => {
-        if (err) return console.error(err.message);
-        if (!row) {
-            db.run('CREATE TABLE users (login TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)', (err) => {
-                if (err) return console.error(err.message);
-                console.log('User table created');
-            });
-        } else console.log('User table already exists');
-    });
+    createTableIfNotExists('users', 'CREATE TABLE users (login TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)');
+    createTableIfNotExists('restoreTokens', 'CREATE TABLE restoreTokens (login TEXT NOT NULL, token TEXT NOT NULL, validUntil DATE NOT NULL)');
+    createTableIfNotExists('transactions', 'CREATE TABLE transactions (login TEXT NOT NULL, destination TEXT NOT NULL, amount MONEY, date DATE NOT NULL)');
+};
 
-    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='restoreTokens'", (err, row) => {
-        if (err) return console.error(err.message);
-        if (!row) {
-            db.run('CREATE TABLE restoreTokens (login TEXT NOT NULL, token TEXT NOT NULL)', (err) => {
-                if (err) return console.error(err.message);
-                console.log('Restore Tokens table created');
-            });
-        } else console.log('Restore Tokens table already exists');
-    });
-}
+// Call the init function to initialize the database
 init();
-
 function randomString(length = 128) {
     const buffer = crypto.randomBytes(length);
-    const randomString = buffer.toString('base64').replace(/\+/g, '0').replace(/\//g, '0').slice(0, length);
-    return randomString;
+    return buffer.toString('base64').replace(/\+/g, '0').replace(/\//g, '0').slice(0, length);
 }
 
 const persistence = {
@@ -89,7 +89,8 @@ const persistence = {
     genRestoreToken: async (login) => {
         return new Promise((resolve, reject) => {
             const token = randomString(128);
-            db.run('INSERT INTO restoreTokens (login, token) VALUES (?, ?)', [login, token], (err) => {
+            const validUntil = moment().add(5, 'minutes').format('YYYY-MM-DDTHH:mm:ss');;
+            db.run('INSERT INTO restoreTokens (login, token, validUntil) VALUES (?, ?, ?)', [login, token, validUntil], (err) => {
                 if (err) {
                     console.log(`ERR: ${err.message}`)
                     reject(`Failed to create restore token: ${err.message}`);
@@ -102,13 +103,18 @@ const persistence = {
 
     updatePassword: async (token, newPassword) => {
         return new Promise((resolve, reject) => {
-            db.get("SELECT login, token FROM restoreTokens WHERE token = ?", [token], async (err, row) => {
+            db.get("SELECT login, token, validUntil FROM restoreTokens WHERE token = ?", [token], async (err, row) => {
                 if (err) {
                     reject(`Error on the server. ${err.message}`);
                     return;
                 }
                 if (!row) {
                     reject('Invalid token');
+                    return;
+                }
+                console.log(row)
+                if (moment(row.validUntil).isBefore(moment.now())) {
+                    reject('Outdated token');
                     return;
                 }
                 const login = row.login
@@ -121,6 +127,34 @@ const persistence = {
                     }
                     resolve('User password updated');
                 });
+            });
+        });
+    },
+
+    transactions: async(login) => {
+        return new Promise((resolve, reject) => {
+            db.all("SELECT destination, amount, date FROM transactions WHERE login = ?", [login], (err, rows) => {
+                if (err) {
+                    console.log(err.message);
+                    reject(`Error on the server. ${err.message}`);
+                    return;
+                }
+                resolve(rows);
+            });
+        });
+    },
+
+    transfer: async(login, destination, amount) => {
+        return new Promise((resolve, reject) => {
+            const query = 'INSERT INTO transactions (login, destination, amount, date) VALUES (?, ?, ?, ?)';
+            const date = moment().format('YYYY-MM-DDTHH:mm:ss');
+
+            db.run(query, [login, destination, amount, date], function(err) {
+                if (err) {
+                    reject(`Error on the server. ${err.message}`);
+                    return;
+                }
+                resolve({ message: 'Transfer successful', id: this.lastID });
             });
         });
     }

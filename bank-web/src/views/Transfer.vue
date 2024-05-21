@@ -1,57 +1,189 @@
+<template>
+  <main>
+    <div class="transfer-form">
+      <input
+          v-model="cardNumber"
+          @change="updateCardNumber"
+          placeholder="Enter card number"
+          class="input"
+      />
+      <button @click="promptTransfer" class="button">Transfer funds</button>
+    </div>
+    <!-- Modal for confirmation -->
+    <div id="modal" v-if="showModal" class="modal">
+      <div class="modal-content">
+        <p>Do you want to send funds to this card number: <span>{{ cardNumber }}</span>?</p>
+        <div class="modal-buttons">
+          <button @click="handleTransfer" class="button">Yes</button>
+          <button @click="cancelTransfer" class="button">No</button>
+        </div>
+      </div>
+    </div>
+    <!-- Transactions Table -->
+    <table class="transactions-table">
+      <thead>
+      <tr>
+        <th>Destination</th>
+        <th>Amount</th>
+        <th>Date</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr v-for="transaction in transactions" :key="transaction.id">
+        <td>{{ transaction.destination }}</td>
+        <td>{{ transaction.amount }}</td>
+        <td>{{ transaction.date }}</td>
+      </tr>
+      </tbody>
+    </table>
+  </main>
+</template>
+
 <script>
-// Ensure global availability for use in inline event handlers
-window.appFunctions = {
-  cardNumber: '1234567891011121',
-  showModal: false,
+import axios from 'axios';
+import { useAuthStore } from '@/stores/auth.js'; // Adjust the import to your actual auth store location
+import { useRouter } from 'vue-router';
 
-  promptTransfer: function() {
-    window.appFunctions.showModal = true;
-    // Update visibility in the DOM, e.g., display modal
-    document.getElementById('modal').style.display = 'flex';
-    document.getElementById('displayCardNumber').textContent = window.appFunctions.cardNumber;
-  },
-
-  handleTransfer: function() {
-    console.log(window.appFunctions.cardNumber);
-    window.appFunctions.showModal = false;
-    document.getElementById('modal').style.display = 'none';
-
-    const apiUrl = 'https://localhost:3337/transfer';
-    const data = {
-      cardNumber: window.appFunctions.cardNumber
+export default {
+  data() {
+    return {
+      cardNumber: '',
+      showModal: false,
+      transactions: []
     };
-
-    fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data)
-    })
-        .then(response => response.json())
-        .then(data => console.log('Success:', data))
-        .catch(error => console.error('Error:', error));
   },
+  created() {
+    this.checkAuthentication();
+    this.fetchTransactions();
+  },
+  methods: {
+    checkAuthentication() {
+      const authStore = useAuthStore();
+      const router = useRouter();
+      if (!authStore.isAuthenticated) {
+        router.push({ name: 'auth' });
+      }
+    },
+    updateCardNumber(event) {
+      this.cardNumber = event.target.value;
+    },
+    promptTransfer() {
+      this.showModal = true;
+    },
+    handleTransfer() {
+      const authStore = useAuthStore();
+      this.showModal = false;
+      const apiUrl = 'https://localhost:3337/transfer';
+      const data = { destination: this.cardNumber, amount: 123 };
 
-  cancelTransfer: function() {
-    window.appFunctions.showModal = false;
-    document.getElementById('modal').style.display = 'none';
+      axios.post(apiUrl, data, {
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      })
+          .then(response => {
+            console.log('Success:', response.data);
+            this.fetchTransactions(); // Refresh transactions after transfer
+          })
+          .catch(error => console.error('Error:', error));
+    },
+    cancelTransfer() {
+      this.showModal = false;
+    },
+    fetchTransactions() {
+      const authStore = useAuthStore();
+      const apiUrl = 'https://localhost:3337/transactions';
+      axios.get(apiUrl, {
+        headers: {
+          'Authorization': `Bearer ${authStore.token}`
+        }
+      })
+          .then(response => {
+            this.transactions = response.data;
+          })
+          .catch(error => console.error('Error fetching transactions:', error.message));
+    }
   }
 };
 </script>
 
-<template>
-  <main>
-    <input onchange="window.appFunctions.cardNumber = this.value"/>
-    <button onclick="window.appFunctions.promptTransfer()">Transfer funds</button>
-    TEST
-    <!-- Modal for confirmation -->
-    <div id="modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center;">
-      <div style="background-color: white; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; align-items: center;">
-        <p>Do you want to send funds to this card number: <span id="displayCardNumber"></span>?</p>
-        <button id="yesBtn" onclick="window.appFunctions.handleTransfer()" style="margin: 10px;">Yes</button>
-        <button onclick="window.appFunctions.cancelTransfer()" style="margin: 10px;">No</button>
-      </div>
-    </div>
-  </main>
-</template>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin: 0;
+  padding: 20px;
+}
+
+.transfer-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input {
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 200px;
+}
+
+.button {
+  padding: 10px 20px;
+  font-size: 16px;
+  color: white;
+  background-color: #007bff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button:hover {
+  background-color: #0056b3;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.transactions-table th,
+.transactions-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+.transactions-table th {
+  background-color: #f2f2f2;
+}
+</style>

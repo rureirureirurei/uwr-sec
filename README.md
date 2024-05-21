@@ -35,7 +35,8 @@ Legend:
   - ~~persistence service~~
 
 - Zadanie 2
-    - basic session handling ❌
+    - ~~basic session handling~~
+    - 
     - persistence for transfer transactions ❌
     - page that displays transactions ❌
     - verify token in the api endpoint ❌

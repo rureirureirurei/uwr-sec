@@ -2,6 +2,7 @@ const { validationResult, body } = require("express-validator");
 const persistence = require("./persistence");
 const config = require('../config.json')
 const {verify, sign} = require("jsonwebtoken");
+const {json} = require("express");
 
 const verifyLogin = body('login').isLength({ min: 1 }).matches(/^[a-zA-Z0-9_]+$/)
 const verifyPassword = body('password').isLength({ min: 8 }).matches(/^[a-zA-Z0-9_!@#$%^&*()]+$/)
@@ -12,21 +13,41 @@ const getUserJWT = (username) => sign(
     {expiresIn: '1d'}
 );
 
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN_HERE
+const extractLoginFromToken = (req) => {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        throw new Error('Authorization header missing');
+    }
 
-    if (token == null) return res.sendStatus(401);
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+        throw new Error('Token missing');
+    }
 
-    verify(token, config.session.key, (err, user) => {
-        if (err) return res.sendStatus(403); // Invalid token
-        req.user = user;
-        console.log(user)
-        next();
-    });
-}
+    try {
+        const decoded = verify(token, config.session.key);
+        return decoded.username; // Assuming the JWT contains a login field
+    } catch (error) {
+
+        throw new Error('Invalid token');
+    }
+};
 
 const endpoints = {
+    authenticateToken: async (req, res, next) =>  {
+        const authHeader = req.headers['authorization'];
+        const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN_HERE
+
+        if (token == null) return res.sendStatus(401);
+
+        verify(token, config.session.key, (err, user) => {
+            if (err) return res.sendStatus(403); // Invalid token
+            req.user = user;
+            console.log(user)
+            next();
+        });
+    },
+
     login: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).send('Password too short or invalid characters');
@@ -60,10 +81,6 @@ const endpoints = {
             res.status(500).send(error);
         }
     },
-    transfer: async (req, res) => {
-        console.log('Data received:', req.body); // Log the received data
-        res.status(200).json({ message: `Data received ${req.body.cardNumber}` }); // Send JSON response back to client
-    },
     reset: async(req, res) => {
         const { login } = req.body
         try {
@@ -84,6 +101,29 @@ const endpoints = {
     },
     verifyLogin,
     verifyPassword,
+
+
+    transfer: async (req, res) => {
+        try {
+            const login = extractLoginFromToken(req); // Extract login from JWT
+            const { destination, amount } = req.body;
+
+            const result = await persistence.transfer(login, destination, amount);
+            res.send(result);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
+    },
+    transactions: async (req, res) => {
+        try {
+            const login = extractLoginFromToken(req); // Extract login from JWT
+            const result = await persistence.transactions(login);
+            console.log(result)
+            res.send(result);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
+    }
 }
 
 module.exports = endpoints;
