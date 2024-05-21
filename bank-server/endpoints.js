@@ -2,18 +2,17 @@ const { validationResult, body } = require("express-validator");
 const persistence = require("./persistence");
 const config = require('../config.json')
 const {verify, sign} = require("jsonwebtoken");
-const {json} = require("express");
 
-const verifyLogin = body('login').isLength({ min: 1 }).matches(/^[a-zA-Z0-9_]+$/)
+const verifyEmail = body('email').isLength({ min: 1 }).matches(/^[a-zA-Z0-9_]+$/)
 const verifyPassword = body('password').isLength({ min: 8 }).matches(/^[a-zA-Z0-9_!@#$%^&*()]+$/)
 
-const getUserJWT = (username) => sign(
-    {username: username},
+const getUserJWT = (email) => sign(
+    {email: email},
     config.session.key,
     {expiresIn: '1d'}
 );
 
-const extractLoginFromToken = (req) => {
+const extractEmailFromToken = (req) => {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
         throw new Error('Authorization header missing');
@@ -26,7 +25,7 @@ const extractLoginFromToken = (req) => {
 
     try {
         const decoded = verify(token, config.session.key);
-        return decoded.username; // Assuming the JWT contains a login field
+        return decoded.email; // Assuming the JWT contains a email field
     } catch (error) {
 
         throw new Error('Invalid token');
@@ -34,6 +33,7 @@ const extractLoginFromToken = (req) => {
 };
 
 const endpoints = {
+    // ----------------------------------- security ----------------------------------------------------
     authenticateToken: async (req, res, next) =>  {
         const authHeader = req.headers['authorization'];
         const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN_HERE
@@ -43,28 +43,27 @@ const endpoints = {
         verify(token, config.session.key, (err, user) => {
             if (err) return res.sendStatus(403); // Invalid token
             req.user = user;
-            console.log(user)
             next();
         });
     },
 
-    login: async (req, res) => {
+    signIn: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).send('Password too short or invalid characters');
-        const { login, password } = req.body;
+        const { email, password } = req.body;
         try {
-            const result = await persistence.login(login, password);
+            const result = await persistence.signIn(email, password);
             if (!result) {
-                return res.status(401).send('Invalid login or password');
+                return res.status(401).send('Invalid email or password');
             }
-            const token = getUserJWT(login);
+            const token = getUserJWT(email);
             res.cookie('jwt', token, {
                 httpOnly: true, // The cookie only accessible by the web server
                 secure: true,   // Set to true if using https
                 sameSite: 'strict', // Helps mitigate CSRF attacks
                 maxAge: 3600000 // 1 hour
             });
-            res.send({ token: token, login: login});
+            res.send({ token: token, email: email});
         } catch (error) {
             res.status(500).send(error.message);
         }
@@ -72,19 +71,19 @@ const endpoints = {
     signup: async (req, res) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) return res.status(400).send('Password too short or invalid characters');
-        // todo check if it's possible that we validate body['login'], body['password'] but other data is smuggled?
-        const { login, password } = req.body;
+        // todo check if it's possible that we validate body['email'], body['password'] but other data is smuggled?
+        const { email, password } = req.body;
         try {
-            const result = await persistence.signUp(login, password);
+            const result = await persistence.signUp(email, password);
             res.send(result);
         } catch (error) {
             res.status(500).send(error);
         }
     },
     reset: async(req, res) => {
-        const { login } = req.body
+        const { email } = req.body
         try {
-            const result = await persistence.genRestoreToken(login);
+            const result = await persistence.genRestoreToken(email);
             res.send(result);
         } catch (error) {
             res.status(500).send(error);
@@ -99,16 +98,14 @@ const endpoints = {
             res.status(500).send(error);
         }
     },
-    verifyLogin,
-    verifyPassword,
-
+    // ---------------------------------- transfer and transactions -------------------------------------
 
     transfer: async (req, res) => {
         try {
-            const login = extractLoginFromToken(req); // Extract login from JWT
+            const email = extractEmailFromToken(req); // Extract email from JWT
             const { destination, amount } = req.body;
-
-            const result = await persistence.transfer(login, destination, amount);
+            console.log(email, destination, amount);
+            const result = await persistence.transfer(email, destination, amount);
             res.send(result);
         } catch (error) {
             res.status(500).send(error.message);
@@ -116,14 +113,18 @@ const endpoints = {
     },
     transactions: async (req, res) => {
         try {
-            const login = extractLoginFromToken(req); // Extract login from JWT
-            const result = await persistence.transactions(login);
-            console.log(result)
+            const email = extractEmailFromToken(req); // Extract email from JWT
+            const result = await persistence.transactions(email);
             res.send(result);
         } catch (error) {
             res.status(500).send(error.message);
         }
-    }
+    },
+
+    // -----------------------------------------generic validators ---------------------------------------------
+    verifyEmail,
+    verifyPassword,
+
 }
 
 module.exports = endpoints;

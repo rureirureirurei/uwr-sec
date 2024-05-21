@@ -21,7 +21,7 @@ Legend:
   - real DNS and letsencrypt ❓
 
 
-### LISTA P2 : 20 / 30 points
+### LISTA P2 : 30 / 30 points
 - Zadanie 1
   - ~~login~~
     - ~~validate~~ 
@@ -29,18 +29,17 @@ Legend:
       - ~~validate~~
   - reset password
     - ~~core functionality~~ 
-    - expiration date❓
+    - ~~expires after 5 min~~
     - remove after use❓
   - ~~password hashing `ARGON2I + SALT + PEPPER`~~
   - ~~persistence service~~
 
-- Zadanie 2
-    - ~~basic session handling~~
-    - 
-    - persistence for transfer transactions ❌
-    - page that displays transactions ❌
-    - verify token in the api endpoint ❌
-    - finally replace login with email or at least rename it idk ❓❓❓
+- ~~Zadanie 2~~
+    - ~~session handling with jwt~~
+    - ~~persistence for transfer transactions~~
+    - ~~page that displays transactions~~
+    - ~~verify token in the api endpoint~~
+    - ~~finally replace login with email or at least rename it idk~~
 
 ### LISTA P3 : 0 / 20 points
 - oauth ❌

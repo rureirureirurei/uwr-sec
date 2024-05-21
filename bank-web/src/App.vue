@@ -19,9 +19,9 @@ const logout = async () => {
       <div v-if="auth.isAuthenticated" style="color: firebrick" @click="logout"> log out</div>
     </div>
   </header>
-  <span style="font-size: 40%">{{auth.token??'no token'}}</span>
+  <span style="font-size: 60%; margin-left: 10%;">pre-alpha</span>
 
-  <div style="padding: 5rem 5rem; display: flex; justify-content: center">
+  <div style="padding: 10rem 5rem; display: flex; justify-content: center">
     <RouterView />
   </div>
 </template>

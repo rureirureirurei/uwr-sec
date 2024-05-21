@@ -4,18 +4,18 @@ import axios from 'axios';
 import router from "@/router/routes.js";
 import {useAuthStore} from "@/stores/auth.js";
 
-const login = ref('');
+const email = ref('');
 const password = ref('');
 const auth = useAuthStore();
 
 const handleSignIn = async () => {
   try {
     const response = await axios.post('https://localhost:3337/signin', {
-      login: login.value,
+      email: email.value,
       password: password.value
     });
     console.log(response.data)
-    auth.setLogin(response.data.login);
+    auth.setEmail(response.data.email);
     auth.setToken(response.data.token);
     await router.push({ name: 'transfer'})
   } catch (error) {
@@ -27,7 +27,7 @@ const handleSignIn = async () => {
 const handleSignUp = async () => {
   try {
     const response = await axios.post('https://localhost:3337/signup', {
-      login: login.value,
+      email: email.value,
       password: password.value
     });
     alert('Sign up successful: ' + response.data);
@@ -43,7 +43,7 @@ const resetPassword = async() => {
 
 <template>
   <div class="auth-card">
-    <input v-model="login" type="text" placeholder="Username" />
+    <input v-model="email" type="text" placeholder="Email" />
     <input v-model="password" type="password" placeholder="Password" />
     <button @click="handleSignIn">Sign In</button>
     <button @click="handleSignUp">Sign Up</button>

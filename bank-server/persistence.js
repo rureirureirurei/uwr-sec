@@ -27,9 +27,9 @@ const init = () => {
         console.log(`Connected to the SQLite database at ${config.database.file}.`);
     });
 
-    createTableIfNotExists('users', 'CREATE TABLE users (login TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)');
-    createTableIfNotExists('restoreTokens', 'CREATE TABLE restoreTokens (login TEXT NOT NULL, token TEXT NOT NULL, validUntil DATE NOT NULL)');
-    createTableIfNotExists('transactions', 'CREATE TABLE transactions (login TEXT NOT NULL, destination TEXT NOT NULL, amount MONEY, date DATE NOT NULL)');
+    createTableIfNotExists('users', 'CREATE TABLE users (email TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)');
+    createTableIfNotExists('restoreTokens', 'CREATE TABLE restoreTokens (email TEXT NOT NULL, token TEXT NOT NULL, validUntil DATE NOT NULL)');
+    createTableIfNotExists('transactions', 'CREATE TABLE transactions (email TEXT NOT NULL, destination TEXT NOT NULL, amount MONEY, date DATE NOT NULL)');
 };
 
 // Call the init function to initialize the database
@@ -41,9 +41,9 @@ function randomString(length = 128) {
 
 const persistence = {
 
-    login: async (login, password) => {
+    signIn: async (email, password) => {
         return new Promise((resolve, reject) => {
-            db.get("SELECT passwordHash, salt FROM users WHERE login = ?", [login], async (err, row) => {
+            db.get("SELECT passwordHash, salt FROM users WHERE email = ?", [email], async (err, row) => {
                 if (err) {
                     reject('Error on the server.');
                     return;
@@ -54,17 +54,17 @@ const persistence = {
                 }
                 const match = await argon2.verify(row.passwordHash, row.salt + password + config.database.pepper);
                 if (match) {
-                    resolve('Login successful');
+                    resolve('email successful');
                 } else {
-                    reject('Login failed');
+                    reject('email failed');
                 }
             });
         });
     },
 
-    signUp: async (login, password) => {
+    signUp: async (email, password) => {
         return new Promise((resolve, reject) => {
-            db.get("SELECT login FROM users WHERE login = ?", [login], async (err, row) => {
+            db.get("SELECT email FROM users WHERE email = ?", [email], async (err, row) => {
                 if (err) {
                     reject('Error on the server.');
                     return;
@@ -75,7 +75,7 @@ const persistence = {
                 }
                 const salt = randomString(128);
                 const passwordHash = await argon2.hash(salt + password + config.database.pepper);
-                db.run('INSERT INTO users (login, passwordHash, salt) VALUES (?, ?, ?)', [login, passwordHash, salt], (err) => {
+                db.run('INSERT INTO users (email, passwordHash, salt) VALUES (?, ?, ?)', [email, passwordHash, salt], (err) => {
                     if (err) {
                         reject(`Failed to create user: ${err.message}`);
                         return;
@@ -86,11 +86,11 @@ const persistence = {
         });
     },
 
-    genRestoreToken: async (login) => {
+    genRestoreToken: async (email) => {
         return new Promise((resolve, reject) => {
             const token = randomString(128);
             const validUntil = moment().add(5, 'minutes').format('YYYY-MM-DDTHH:mm:ss');;
-            db.run('INSERT INTO restoreTokens (login, token, validUntil) VALUES (?, ?, ?)', [login, token, validUntil], (err) => {
+            db.run('INSERT INTO restoreTokens (email, token, validUntil) VALUES (?, ?, ?)', [email, token, validUntil], (err) => {
                 if (err) {
                     console.log(`ERR: ${err.message}`)
                     reject(`Failed to create restore token: ${err.message}`);
@@ -103,7 +103,7 @@ const persistence = {
 
     updatePassword: async (token, newPassword) => {
         return new Promise((resolve, reject) => {
-            db.get("SELECT login, token, validUntil FROM restoreTokens WHERE token = ?", [token], async (err, row) => {
+            db.get("SELECT email, token, validUntil FROM restoreTokens WHERE token = ?", [token], async (err, row) => {
                 if (err) {
                     reject(`Error on the server. ${err.message}`);
                     return;
@@ -117,10 +117,10 @@ const persistence = {
                     reject('Outdated token');
                     return;
                 }
-                const login = row.login
+                const email = row.email
                 const salt = randomString(128);
                 const passwordHash = await argon2.hash(salt + newPassword + config.database.pepper);
-                db.run('UPDATE users SET passwordHash = ?, salt = ? WHERE login = ?', [passwordHash, salt, login], (err) => {
+                db.run('UPDATE users SET passwordHash = ?, salt = ? WHERE email = ?', [passwordHash, salt, email], (err) => {
                     if (err) {
                         reject(`Failed to update user: ${err.message}`);
                         return;
@@ -131,9 +131,9 @@ const persistence = {
         });
     },
 
-    transactions: async(login) => {
+    transactions: async(email) => {
         return new Promise((resolve, reject) => {
-            db.all("SELECT destination, amount, date FROM transactions WHERE login = ?", [login], (err, rows) => {
+            db.all("SELECT destination, amount, date FROM transactions WHERE email = ?", [email], (err, rows) => {
                 if (err) {
                     console.log(err.message);
                     reject(`Error on the server. ${err.message}`);
@@ -144,12 +144,12 @@ const persistence = {
         });
     },
 
-    transfer: async(login, destination, amount) => {
+    transfer: async(email, destination, amount) => {
         return new Promise((resolve, reject) => {
-            const query = 'INSERT INTO transactions (login, destination, amount, date) VALUES (?, ?, ?, ?)';
+            const query = 'INSERT INTO transactions (email, destination, amount, date) VALUES (?, ?, ?, ?)';
             const date = moment().format('YYYY-MM-DDTHH:mm:ss');
 
-            db.run(query, [login, destination, amount, date], function(err) {
+            db.run(query, [email, destination, amount, date], function(err) {
                 if (err) {
                     reject(`Error on the server. ${err.message}`);
                     return;

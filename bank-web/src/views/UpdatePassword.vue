@@ -7,7 +7,7 @@ const route = useRoute()
 const password = ref('');
 const updatePassword = async() => {
   try {
-    const response = await axios.post('https://localhost:3337/update/password', {
+    await axios.post('https://localhost:3337/update/password', {
       token: route.params.token,
       password: password.value,
     });

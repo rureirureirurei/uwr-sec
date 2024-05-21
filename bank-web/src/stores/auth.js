@@ -4,24 +4,24 @@ import { defineStore } from 'pinia';
 export const useAuthStore = defineStore('auth', () => {
   // Initialize state with values from localStorage
   const token = ref(localStorage.getItem('auth_token'));
-  const login = ref(localStorage.getItem('auth_login'));
+  const email = ref(localStorage.getItem('auth_email'));
 
-  // Actions to update token and login
+  // Actions to update token and email
   function setToken(newToken) {
     token.value = newToken;
     localStorage.setItem('auth_token', newToken);
   }
 
-  function setLogin(newLogin) {
-    login.value = newLogin;
-    localStorage.setItem('auth_login', newLogin);
+  function setEmail(newemail) {
+    email.value = newemail;
+    localStorage.setItem('auth_email', newemail);
   }
 
   function revoke() {
-    login.value = null;
+    email.value = null;
     token.value = null;
     localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_login');
+    localStorage.removeItem('auth_email');
   }
 
   // Optional: computed properties if needed
@@ -36,13 +36,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
   });
 
-  watch(login, (newLogin) => {
-    if (newLogin) {
-      localStorage.setItem('auth_login', newLogin);
+  watch(email, (newEmail) => {
+    if (newEmail) {
+      localStorage.setItem('auth_email', newEmail);
     } else {
-      localStorage.removeItem('auth_login');
+      localStorage.removeItem('auth_email');
     }
   });
 
-  return { token, login, setToken, setLogin, isAuthenticated, revoke };
+  return { token, email, setToken, setEmail, isAuthenticated, revoke };
 });

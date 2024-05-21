@@ -23,9 +23,9 @@
     <table class="transactions-table">
       <thead>
       <tr>
-        <th>Destination</th>
-        <th>Amount</th>
-        <th>Date</th>
+        <th>destination</th>
+        <th>amount</th>
+        <th>date</th>
       </tr>
       </thead>
       <tbody>
@@ -133,7 +133,7 @@ body {
   padding: 10px 20px;
   font-size: 16px;
   color: white;
-  background-color: #007bff;
+  background-color: black;
   border: none;
   border-radius: 5px;
   cursor: pointer;
@@ -141,7 +141,7 @@ body {
 }
 
 .button:hover {
-  background-color: #0056b3;
+  cursor: pointer;
 }
 
 .modal {
@@ -167,7 +167,8 @@ body {
 
 .modal-buttons {
   display: flex;
-  gap: 10px;
+  margin-top: 1rem;
+  gap: 30px;
 }
 
 .transactions-table {

@@ -6,7 +6,7 @@ const email = ref('');
 const sendResetEmail = async() => {
   try {
     const response = await axios.post('https://localhost:3337/reset', {
-      login: email.value,
+      email: email.value,
     });
     const token = response.data
     const resetLink = `https://localhost:3338/update/password/token/${token}`

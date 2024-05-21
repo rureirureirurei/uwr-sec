@@ -26,19 +26,19 @@ const httpsOptions = {
 app.post('/transfer', endpoints.authenticateToken, endpoints.transfer);
 
 app.post('/signin',
-    endpoints.verifyLogin,
+    endpoints.verifyEmail,
     endpoints.verifyPassword,
-    endpoints.login
+    endpoints.signIn
 );
 
 app.post('/signup',
-    endpoints.verifyLogin,
+    endpoints.verifyEmail,
     endpoints.verifyPassword,
     endpoints.signup
 );
 
 app.post('/reset',
-    endpoints.verifyLogin,
+    endpoints.verifyEmail,
     endpoints.reset
 );
 
