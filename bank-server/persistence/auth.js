@@ -89,7 +89,6 @@ module.exports = {
         [email, token, validUntil],
         (err) => {
           if (err) {
-            console.log(`ERR: ${err.message}`);
             reject(`Failed to create restore token: ${err.message}`);
             return;
           }
@@ -112,7 +111,6 @@ module.exports = {
             reject("Invalid token");
             return;
           }
-          console.log(row);
           if (moment(row.validUntil).isBefore(moment.now())) {
             reject("Outdated token");
             return;

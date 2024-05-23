@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const persistence = require("../persistence/persistence");
 const { extractEmailFromToken} = require('./validation');
-router.post(
+router.get(
     '/list',
     async (req, res) => {
         try {
@@ -20,7 +20,6 @@ router.post(
         try {
             const email = extractEmailFromToken(req); // Extract email from JWT
             const { destination, amount } = req.body;
-            console.log(email, destination, amount);
             const result = await persistence.transaction.transfer(email, destination, amount);
             res.send(result);
         } catch (error) {

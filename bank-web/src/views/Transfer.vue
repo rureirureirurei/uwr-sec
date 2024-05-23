@@ -3,16 +3,21 @@
     <div class="transfer-form">
       <input
           v-model="cardNumber"
-          @change="updateCardNumber"
           placeholder="Enter card number"
           class="input"
+      />
+      <input
+          v-model="amount"
+          placeholder="Amount"
+          class="input"
+          style="max-width: 5rem;"
       />
       <button @click="promptTransfer" class="button">Transfer funds</button>
     </div>
     <!-- Modal for confirmation -->
     <div id="modal" v-if="showModal" class="modal">
       <div class="modal-content">
-        <p>Do you want to send funds to this card number: <span>{{ cardNumber }}</span>?</p>
+        <p>Do you want to send {{amount}}$ to <span>{{ cardNumber }}</span>?</p>
         <div class="modal-buttons">
           <button @click="handleTransfer" class="button">Yes</button>
           <button @click="cancelTransfer" class="button">No</button>
@@ -39,7 +44,7 @@
 
     <footer
         style="margin-top: 5rem; color: blue; text-decoration: underline; cursor: pointer"
-        @click="navigateToTOTP"
+        @click="router().push({ name: 'totp' })"
     >enable one-time password</footer>
   </main>
 </template>
@@ -48,13 +53,15 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore.js'; // Adjust the import to your actual auth store location
 import router from "@/router/routes.js";
+import {ref} from "vue";
 
 export default {
   data() {
     return {
-      cardNumber: '',
+      cardNumber: ref(''),
       showModal: false,
-      transactions: []
+      transactions: [],
+      amount: ref(0),
     };
   },
   created() {
@@ -62,14 +69,14 @@ export default {
     this.fetchTransactions();
   },
   methods: {
+    router() {
+      return router
+    },
     checkAuthentication() {
       const authStore = useAuthStore();
       if (!authStore.isAuthenticated) {
         router.push({ name: 'auth' });
       }
-    },
-    updateCardNumber(event) {
-      this.cardNumber = event.target.value;
     },
     promptTransfer() {
       this.showModal = true;
@@ -77,7 +84,7 @@ export default {
     handleTransfer() {
       const authStore = useAuthStore();
       this.showModal = false;
-      const apiUrl = 'https://localhost:3337/transfer';
+      const apiUrl = 'https://localhost:3337/transactions/transfer';
       const data = { destination: this.cardNumber, amount: 123 };
 
       axios.post(apiUrl, data, {
@@ -88,6 +95,7 @@ export default {
           .then(response => {
             console.log('Success:', response.data);
             this.fetchTransactions(); // Refresh transactions after transfer
+            this.cardNumber = '';
           })
           .catch(error => console.error('Error:', error));
     },
@@ -96,7 +104,7 @@ export default {
     },
     fetchTransactions() {
       const authStore = useAuthStore();
-      const apiUrl = 'https://localhost:3337/transactions';
+      const apiUrl = 'https://localhost:3337/transactions/list';
       axios.get(apiUrl, {
         headers: {
           'Authorization': `Bearer ${authStore.token}`
@@ -107,9 +115,6 @@ export default {
           })
           .catch(error => console.error('Error fetching transactions:', error.message));
     },
-    async navigateToTOTP() {
-      await router.push({ name: 'totp' });
-    }
   }
 };
 </script>
@@ -131,7 +136,6 @@ body {
   padding: 10px;
   font-size: 16px;
   border: 1px solid;
-  border-radius: 5px;
   width: 200px;
 }
 
@@ -181,7 +185,6 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  height: 20rem !important;
   overflow: scroll;
 }
 

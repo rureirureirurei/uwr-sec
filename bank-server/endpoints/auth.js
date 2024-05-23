@@ -9,14 +9,12 @@ router.post("/signin", validateEmail, validatePassword, async (req, res) => {
   if (!errors.isEmpty())
     return res.status(400).send("Password too short or invalid characters");
   const { email, password } = req.body;
-  console.log(email, password);
   try {
     const result = await persistence.auth.signIn(email, password);
     if (!result) {
       return res.status(401).send("Invalid email or password");
     }
     const token = getUserJWT(email);
-    console.log(token);
     res.cookie("jwt", token, {
       httpOnly: true, // The cookie only accessible by the web server
       secure: true, // Set to true if using https

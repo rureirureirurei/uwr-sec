@@ -13,11 +13,10 @@ const initDb = () => {
 };
 
 const getDb = () => {
-    db = new sqlite3.Database(config.database.file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+    const db = new sqlite3.Database(config.database.file, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
         if (err) {
             return console.error(err.message);
         }
-        console.log(`Connected to the SQLite database at ${config.database.file}.`);
     })
     return db;
 }
