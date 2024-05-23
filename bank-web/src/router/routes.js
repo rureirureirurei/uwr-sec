@@ -11,22 +11,27 @@ const router = createRouter({
     {
       path: '/transfer',
       name: 'transfer',
-      component: () => import('../views/Transfer.vue')
+      component: () => import('@/views/Transfer.vue')
     },
     {
       path: '/auth',
       name: 'auth',
-      component: () => import('../views/Auth.vue')
+      component: () => import('@/views/Auth.vue')
     },
     {
       path: '/reset',
       name: 'reset',
-      component: () => import('../views/Reset.vue')
+      component: () => import('@/views/Reset.vue')
     },
     {
       path: '/update/password/token/:token',
       name: 'updatePassword',
-      component: () => import('../views/UpdatePassword.vue')
+      component: () => import('@/views/UpdatePassword.vue')
+    },
+    {
+      path: '/totp',
+      name: 'totp',
+      component: () => import('@/views/TOTP.vue')
     }
   ]
 })

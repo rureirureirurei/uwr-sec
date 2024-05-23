@@ -22,27 +22,32 @@
     <!-- Transactions Table -->
     <table class="transactions-table">
       <thead>
-      <tr>
-        <th>destination</th>
-        <th>amount</th>
-        <th>date</th>
+      <tr >
+        <th style="background-color: white !important;">destination</th>
+        <th style="background-color: white !important;">amount</th>
+        <th style="background-color: white !important;">date</th>
       </tr>
       </thead>
-      <tbody>
-      <tr v-for="transaction in transactions" :key="transaction.id">
-        <td>{{ transaction.destination }}</td>
-        <td>{{ transaction.amount }}</td>
-        <td>{{ transaction.date }}</td>
-      </tr>
+        <tbody>
+        <tr v-for="transaction in transactions" :key="transaction.id" style="background-color: white !important;">
+            <td>{{ transaction.destination }}</td>
+            <td>{{ transaction.amount }}</td>
+            <td>{{ transaction.date }}</td>
+        </tr>
       </tbody>
-    </table>
+      </table>
+
+    <footer
+        style="margin-top: 5rem; color: blue; text-decoration: underline; cursor: pointer"
+        @click="navigateToTOTP"
+    >enable one-time password</footer>
   </main>
 </template>
 
 <script>
 import axios from 'axios';
-import { useAuthStore } from '@/stores/auth.js'; // Adjust the import to your actual auth store location
-import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/authStore.js'; // Adjust the import to your actual auth store location
+import router from "@/router/routes.js";
 
 export default {
   data() {
@@ -59,7 +64,6 @@ export default {
   methods: {
     checkAuthentication() {
       const authStore = useAuthStore();
-      const router = useRouter();
       if (!authStore.isAuthenticated) {
         router.push({ name: 'auth' });
       }
@@ -102,6 +106,9 @@ export default {
             this.transactions = response.data;
           })
           .catch(error => console.error('Error fetching transactions:', error.message));
+    },
+    async navigateToTOTP() {
+      await router.push({ name: 'totp' });
     }
   }
 };
@@ -109,8 +116,7 @@ export default {
 
 <style>
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
+  //font-family: Arial, sans-serif;
   margin: 0;
   padding: 20px;
 }
@@ -124,7 +130,7 @@ body {
 .input {
   padding: 10px;
   font-size: 16px;
-  border: 1px solid #ccc;
+  border: 1px solid;
   border-radius: 5px;
   width: 200px;
 }
@@ -175,12 +181,14 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  height: 20rem !important;
+  overflow: scroll;
 }
 
 .transactions-table th,
 .transactions-table td {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid black;
   text-align: left;
 }
 

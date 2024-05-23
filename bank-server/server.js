@@ -1,19 +1,16 @@
-const config = require('../config.json')
-const endpoints = require('./endpoints')
-
+// ------------------------  external imports ------------------------
 const express = require('express');
-const session = require('express-session');
 const cors = require('cors');
 const app = express();
 const https = require('https');
 const fs = require('fs');
 
-app.use(session({
-    secret: config.session.key,
-    resave: false,
-    saveUninitialized: true,
-    cookie: { secure: true }
-}));
+// -------------------------- inner imports --------------------------
+const config = require('../config.json')
+const transaction = require('./endpoints/transaction')
+const auth = require('./endpoints/auth')
+const totp = require('./endpoints/totp')
+const {initDb} = require("./persistence/initdb");
 
 app.use(cors());
 app.use(express.json());
@@ -23,31 +20,16 @@ const httpsOptions = {
     cert: fs.readFileSync(config.https.certificate)
 };
 
-app.post('/transfer', endpoints.authenticateToken, endpoints.transfer);
+initDb();
 
-app.post('/signin',
-    endpoints.verifyEmail,
-    endpoints.verifyPassword,
-    endpoints.signIn
-);
+app.use('/auth', auth)
+app.use('/transactions', transaction);
+app.use('/totp', totp);
 
-app.post('/signup',
-    endpoints.verifyEmail,
-    endpoints.verifyPassword,
-    endpoints.signup
-);
 
-app.post('/reset',
-    endpoints.verifyEmail,
-    endpoints.reset
-);
-
-app.post('/update/password',
-    endpoints.verifyPassword,
-    endpoints.updatePassword,
-);
-
-app.get('/transactions', endpoints.authenticateToken, endpoints.transactions)
+/*
+app.post('/generate-totp-secret', endpoints.authenticateToken, enpoints.genTOTP)
+*/
 
 /* Actually run server */
 https.createServer(httpsOptions, app).listen(config.server.port, () => {
