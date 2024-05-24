@@ -43,3 +43,13 @@ Legend:
 
 ### LISTA P3 : 0 / 20 points
 - oauth ❌
+
+### LISTA P4
+- TOTP
+  - ~~totp generation w/ qrcode~~
+  - ~~totp validation~~
+  - totp persistence
+  - adjust login user flow
+
+- SQLMAP
+  
