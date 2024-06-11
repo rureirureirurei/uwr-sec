@@ -6,8 +6,6 @@ Legend:
 - ❌ - Something important is not implemented yet
 - ❓ - Core functionality implemented, but may be improved 
 
-
-
 ### LISTA P1 : 45 / 45 points
 - Zadanie 1
   - ~~ssh~~
