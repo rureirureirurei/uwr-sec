@@ -23,6 +23,7 @@ const logout = async () => {
         login
       </div>
       <div v-if="auth.isAuthenticated" style="color: firebrick" @click="logout">log out</div>
+      <div v-if="auth.isAuthenticated && !(route.name === 'transfer')" style="color: black" @click="router.push({ name : 'transfer'})">tranfser</div>
     </div>
   </header>
   <span style="font-size: 60%; margin-left: 10%">pre-alpha</span>

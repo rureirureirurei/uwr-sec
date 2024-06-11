@@ -6,9 +6,10 @@ const { validateEmail, validatePassword, getUserJWT } = require("./validation");
 
 router.post("/signin", validateEmail, validatePassword, async (req, res) => {
   const errors = validationResult(req);
+  const { email, password } = req.body;
+  console.log(email, password);
   if (!errors.isEmpty())
     return res.status(400).send("Password too short or invalid characters");
-  const { email, password } = req.body;
   try {
     const result = await persistence.auth.signIn(email, password);
     if (!result) {

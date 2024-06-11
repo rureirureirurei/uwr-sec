@@ -85,19 +85,18 @@ export default {
       const authStore = useAuthStore();
       this.showModal = false;
       const apiUrl = 'https://localhost:3337/transactions/transfer';
-      const data = { destination: this.cardNumber, amount: 123 };
-
+      const data = { destination: this.cardNumber, amount: this.amount };
       axios.post(apiUrl, data, {
         headers: {
           'Authorization': `Bearer ${authStore.token}`
         }
       })
-          .then(response => {
-            console.log('Success:', response.data);
-            this.fetchTransactions(); // Refresh transactions after transfer
-            this.cardNumber = '';
-          })
-          .catch(error => console.error('Error:', error));
+      .then(response => {
+        console.log('Success:', response.data);
+        this.fetchTransactions(); // Refresh transactions after transfer
+        this.cardNumber = '';
+      })
+      .catch(error => console.error('Error:', error));
     },
     cancelTransfer() {
       this.showModal = false;
@@ -110,10 +109,10 @@ export default {
           'Authorization': `Bearer ${authStore.token}`
         }
       })
-          .then(response => {
-            this.transactions = response.data;
-          })
-          .catch(error => console.error('Error fetching transactions:', error.message));
+      .then(response => {
+        this.transactions = response.data;
+      })
+      .catch(error => console.error('Error fetching transactions:', error.message));
     },
   }
 };

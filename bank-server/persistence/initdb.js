@@ -5,9 +5,10 @@ const initDb = () => {
     const db = getDb();
     // Check if the tables exist and create them if they don't
     db.serialize(() => {
-        db.run('CREATE TABLE IF NOT EXISTS users (login TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)');
-        db.run('CREATE TABLE IF NOT EXISTS restoreTokens (login TEXT NOT NULL, token TEXT NOT NULL)');
-        db.run('CREATE TABLE IF NOT EXISTS transactions (login TEXT NOT NULL, destination TEXT NOT NULL, amount REAL NOT NULL, date DATE NOT NULL)');
+        db.run('CREATE TABLE IF NOT EXISTS users (email TEXT PRIMARY KEY, passwordHash TEXT NOT NULL, salt TEXT NOT NULL)');
+        db.run('CREATE TABLE IF NOT EXISTS restoreTokens (email TEXT NOT NULL, token TEXT NOT NULL)');
+        db.run('CREATE TABLE IF NOT EXISTS transactions (email TEXT NOT NULL, destination TEXT NOT NULL, amount REAL NOT NULL, date DATE NOT NULL)');
+        db.run('CREATE TABLE IF NOT EXISTS totpTokens (email TEXT NOT NULL, secret TEXT NOT NULL)');
     });
     return db;
 };

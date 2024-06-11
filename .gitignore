@@ -1,4 +1,5 @@
 config.json
+userdb.sqlite
 .idea/
 https/
 bank-server/node_modules/

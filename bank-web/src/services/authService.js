@@ -14,7 +14,7 @@ export const authService = {
       auth.setToken(response.data.token);
       await router.push({ name: 'transfer'})
     } catch (error) {
-      alert('Sign in failed 😢: ' + error);
+      alert('Sign in failed 😢');
     }
   },
   signUp: async (email, password) => {
@@ -28,5 +28,7 @@ export const authService = {
       alert('Sign up failed: ' + error.response.data)
     }
   },
-  reset: async()
+  reset: async() => {
+
+  }
 }
