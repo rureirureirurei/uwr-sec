@@ -43,3 +43,27 @@ Legend:
 
 ### LISTA P3 : 0 / 20 points
 - oauth ❌
+
+### LISTA P4: 0 / 40 points
+- totp (Didn't add it to the login page, but it's a cybersec class, not the web app development one 🤷)
+  - ~~totp gen~~
+  - ~~totp verify~~
+  - ~~totp sql add to table~~
+  - totp add to login page
+-sqlmap
+  - test sqlmap
+  - make code vulnerable
+
+### LISTA P5: 0 / 40 points
+- basic rsa timing
+- blind sign 
+- blind decrypt
+
+### LISTA P6: 10 / 100 points
+- 20 ZAP
+-  ~~10 jwt~~
+- 10 session storage
+- 10 sec config
+- cctv backdoor
+- cctv invinsible
+
